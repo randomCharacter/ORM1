@@ -1,4 +1,4 @@
-# ORM2
+# ORM1
 
 Rešenja zadataka sa vežbi predmeta "Osnovi računarskih mreža 1" koje su rađene 2017. godine na Fakultetu Tehničkih nauka u Novom Sadu.   
 
