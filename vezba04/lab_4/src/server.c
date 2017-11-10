@@ -1,4 +1,4 @@
-/* 
+/*
     ********************************************************************
     Odsek:          Elektrotehnika i racunarstvo
     Departman:      Racunarstvo i automatika
@@ -7,10 +7,10 @@
     Godina studija: Treca (III)
     Skolska godina: 2017/2018
     Semestar:       Zimski (V)
-    
+
     Ime fajla:      server.c
     Opis:           TCP/IP server
-    
+
     Platforma:      Raspberry Pi 2 - Model B
     OS:             Raspbian
     ********************************************************************
@@ -23,14 +23,17 @@
 #include<unistd.h>    //write
 
 #define DEFAULT_BUFLEN 512
-#define DEFAULT_PORT   27015
+#define DEFAULT_CLIENT_PORT   27016
+#define DEFAULT_SERVER_PORT   27015
 
 int main(int argc , char *argv[])
 {
     int socket_desc , client_sock , c , read_size;
     struct sockaddr_in server , client;
     char client_message[DEFAULT_BUFLEN];
-   
+
+    int sock;
+
     //Create socket
     socket_desc = socket(AF_INET , SOCK_STREAM , 0);
     if (socket_desc == -1)
@@ -42,7 +45,7 @@ int main(int argc , char *argv[])
     //Prepare the sockaddr_in structure
     server.sin_family = AF_INET;
     server.sin_addr.s_addr = INADDR_ANY;
-    server.sin_port = htons(DEFAULT_PORT);
+    server.sin_port = htons(DEFAULT_SERVER_PORT);
 
     //Bind
     if( bind(socket_desc,(struct sockaddr *)&server , sizeof(server)) < 0)
@@ -70,9 +73,9 @@ int main(int argc , char *argv[])
     puts("Connection accepted");
 
     //Receive a message from client
-    while( (read_size = recv(client_sock , client_message , DEFAULT_BUFLEN , 0)) > 0 )
+    while( (read_size = recv(client_sock , &client_message , DEFAULT_BUFLEN , 0)) > 0 )
     {
-        printf("Bytes received: %d\n", read_size);
+        printf("\nMessage: %s\n", client_message);
     }
 
     if(read_size == 0)
@@ -85,6 +88,40 @@ int main(int argc , char *argv[])
         perror("recv failed");
     }
 
+    //Send response to client
+    puts("\nSending response...\n");
+
+    //Create socket
+    sock = socket(AF_INET , SOCK_STREAM , 0);
+    if (sock == -1)
+    {
+        printf("Could not create socket");
+    }
+    puts("Socket created");
+
+    server.sin_addr.s_addr = inet_addr("127.0.0.1");
+    server.sin_family = AF_INET;
+    server.sin_port = htons(DEFAULT_CLIENT_PORT);
+
+    //Connect to client
+    if (connect(sock , (struct sockaddr *)&server , sizeof(server)) < 0)
+    {
+        perror("connect failed. Error");
+        return 1;
+    }
+
+    puts("Connected\n");
+
+    //Send some data
+    if( send(sock , client_message , strlen(client_message) + 1, 0) < 0)
+    {
+        puts("Send failed");
+        return 1;
+    }
+
+    puts("Message sent");
+
+    close(sock);
+
     return 0;
 }
-
