@@ -21,14 +21,16 @@
 #include<arpa/inet.h>  //inet_aton
 #include<sys/socket.h> //socket
 #include <unistd.h>    //close
+#include <netdb.h>     //gethostbyname
 
-#define SERVER "127.0.0.1"
+#define SERVER "raspberrypi82321"
 #define BUFLEN 512  //Max length of buffer
 #define PORT 8888   //The port on which to send data
 
 int main(void)
 {
     struct sockaddr_in sock_server;
+    struct hostent *he;
     int s, slen = sizeof(sock_server);
     char buf[BUFLEN];
     char message[BUFLEN];
@@ -45,11 +47,13 @@ int main(void)
     sock_server.sin_port = htons(PORT);
 
     // Check if address is valid
-    if (inet_aton(SERVER, &sock_server.sin_addr) == 0)
+    //if (inet_aton(SERVER, &sock_server.sin_addr) == 0)
+    if ((he = gethostbyname(SERVER)) == NULL)
     {
-        fprintf(stderr, "inet_aton failed. Error\n");
+        fprintf(stderr, "gethostbyname failed. Error\n");
         return 1;
     }
+    memcpy(&sock_server.sin_addr, he->h_addr_list[0], he->h_length);
 
     do
     {
